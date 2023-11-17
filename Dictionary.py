@@ -1,4 +1,3 @@
-
 Teams_and_ID = {
   "Premier_League": "c9",
   "La_Liga": "c12",
@@ -14,6 +13,8 @@ Teams_and_ID = {
   "Major-League-Soccer": "c22"
 }
 Premier_League_Teams = {
+  "leagueID": "c9",
+  "leagueName": "Premier-League",
   "Arsenal": "18bb7c10",
   "Aston-Villa": "8602292d",
   "Bournemouth": "4ba7cbea",
@@ -36,6 +37,8 @@ Premier_League_Teams = {
   "Wolverhampton-Wanderers": "8cec06e1",
 }
 La_Liga_Teams= {
+  "leagueID": "c12",
+  "leagueName": "La-Liga",
   "Alaves": "8d6fd021",
   "Almeria": "78ecf4bb",
   "Athletic-Club": "78ecf4bb",

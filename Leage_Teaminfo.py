@@ -1,14 +1,6 @@
-Match_Logs_Type = {
-  "Shooting": "shooting",
-  "keeping": "keeper",
-  "Passing": "passing",
-  "pass type": "passing_type",
-  "GCA": "gca",
-  "Defensive_actions": "defense",
-  "Possession": "possession",
-  "Miscellaneous Stats": "misc",
-}
 Premier_League_Teams = {
+  "leagueID":"c9",
+  "leagueName":"Premier-League",
   "Arsenal": "18bb7c10",
   "Aston-Villa": "8602292d",
   "Bournemouth": "4ba7cbea",
@@ -31,6 +23,8 @@ Premier_League_Teams = {
   "Wolverhampton-Wanderers": "8cec06e1",
 }
 La_Liga_Teams= {
+  "leagueID":"c12",
+  "leagueName":"La-Liga",
   "Alaves": "8d6fd021",
   "Almeria": "78ecf4bb",
   "Athletic-Club": "78ecf4bb",
@@ -51,4 +45,17 @@ La_Liga_Teams= {
   "Sevilla": "ad2be733",
   "Vallencia": "dcc91a7b",
   "Villareal": "2a8183b3",
+}
+
+test={
+    "leagueID":"testID",
+    "leagueName":"testname",
+    'this': 'is',
+    'a': 'test',
+    'this': 'is',
+    'a': 'test',
+    'this': 'is',
+    'a': 'test',
+    'this': 'is',
+    'a': 'test'
 }

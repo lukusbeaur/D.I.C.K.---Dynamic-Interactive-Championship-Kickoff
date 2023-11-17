@@ -1,0 +1,12 @@
+Date,Time,Round,Day,Venue,Result,GF,GA,Opponent,Gls,Sh,SoT,SoT%,G/Sh,G/SoT,Dist,FK,PK,PKatt,xG,npxG,npxG/Sh,G-xG,np:G-xG,Match Report
+8/11/2023,20:00,Matchweek 1,Fri,Away,W,3,0,Burnley,3,17,8,47.1,0.18,0.38,13.9,0,0,0,1.9,1.9,0.12,1.1,1.1,Match Report
+8/19/2023,20:00,Matchweek 2,Sat,Home,W,1,0,Newcastle Utd,1,14,4,28.6,0.07,0.25,17.9,0,0,0,1,1,0.07,0,0,Match Report
+8/27/2023,14:00,Matchweek 3,Sun,Away,W,2,1,Sheffield Utd,2,29,9,31,0.07,0.22,17.3,2,0,1,3.5,2.8,0.1,-1.5,-0.8,Match Report
+9/2/2023,15:00,Matchweek 4,Sat,Home,W,5,1,Fulham,5,6,4,66.7,0.67,1,14.8,0,1,1,2.2,1.4,0.25,2.8,2.6,Match Report
+9/16/2023,15:00,Matchweek 5,Sat,Away,W,3,1,West Ham,3,29,13,44.8,0.1,0.23,16.4,1,0,0,3.6,3.6,0.13,-0.6,-0.6,Match Report
+9/23/2023,15:00,Matchweek 6,Sat,Home,W,2,0,Nott'ham Forest,2,7,4,57.1,0.29,0.5,17.2,2,0,0,1.3,1.3,0.19,0.7,0.7,Match Report
+9/30/2023,15:00,Matchweek 7,Sat,Away,L,1,2,Wolves,1,23,8,34.8,0.04,0.13,19.3,1,0,0,0.9,0.9,0.04,0.1,0.1,Match Report
+10/8/2023,16:30,Matchweek 8,Sun,Away,L,0,1,Arsenal,0,4,0,0,0,,14.9,0,0,0,0.5,0.5,0.12,-0.5,-0.5,Match Report
+10/21/2023,15:00,Matchweek 9,Sat,Home,W,2,1,Brighton,2,10,5,50,0.2,0.4,18.8,1,0,0,0.8,0.8,0.08,1.2,1.2,Match Report
+10/29/2023,15:30,Matchweek 10,Sun,Away,W,3,0,Manchester Utd,3,20,9,45,0.1,0.22,17.2,2,1,1,4,3.2,0.16,-1,-1.2,Match Report
+11/4/2023,15:00,Matchweek 11,Sat,Home,W,6,1,Bournemouth,6,21,8,38.1,0.29,0.75,16.4,0,0,0,1.9,1.9,0.09,4.1,4.1,Match Report

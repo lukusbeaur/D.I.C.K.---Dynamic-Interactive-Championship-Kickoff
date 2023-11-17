@@ -5,6 +5,7 @@ from Dictionary import La_Liga_Teams
 
 
 First_Section= 'https://fbref.com/en/squads/'
+#instead of VAR create a loop that iterates the last numebr of each year and then do it agian but +1
 Current_Season_and_Filler= '/2023-2024/matchlogs/'
 Twenty_Two_Season_and_Filler= '/2022-2023/matchlogs/'
 Premier_League_Number= "c9"
@@ -16,9 +17,11 @@ LL_Name= 'La-Liga'
 data = []
 
 #Example url https://fbref.com/en/squads/361ca564/2023-2024/matchlogs/c9/shooting/Tottenham-Hotspur-Match-Logs-Premier-League
-#            |      First_Section       |Team ID |   Year & Filler  |L# | M_L_T  | Team_Name      | Filler   | League Name  |
+#            |      First_Section       |Team ID |   Year & Filler   |L#| M_L_T  | Team_Name      | Filler   | League Name  |
 
 #2023-2024 PREMIER LEAGUE SEASON
+
+
 for Team_Name,Team_ID in Premier_League_Teams.items(): #Calls to the dictionary Teams which includes Team names in URL Format and its ID number
   y= f'{First_Section}{Team_ID}'# https://fbref.com/en/squads/Team# n
   b= f'{Team_Name}'# Team Name

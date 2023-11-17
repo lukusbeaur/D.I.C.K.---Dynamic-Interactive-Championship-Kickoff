@@ -22,9 +22,10 @@ Match_Logs_Type = {
 def is_dictionary(obj):
     return isinstance(obj,dict)
 
-def urlbuilder(seasons, dic_league, logtypes):
+def urlbuilderfunc(seasons, dic_league, logtypes):
     First_Section= 'https://fbref.com/en/squads/'
     Match_Logs= '-Match-Logs-'
+    urllist=[]
     #we want to skip the first 2 lines because we embedded some metadata there (I.E)
     iterator = iter(dic_league.items())
 
@@ -38,8 +39,10 @@ def urlbuilder(seasons, dic_league, logtypes):
 #Example url https://fbref.com/en/squads/361ca564/2023-2024/matchlogs/c9/shooting/Tottenham-Hotspur-Match-Logs-Premier-League
 #            |      First_Section       |Team ID |   Year & Filler   |L#| M_L_T  | Team_Name      | Filler   | League Name  |
                 url= f'{First_Section}{teamID}/{season}/{dic_league.get("leagueID")}/{type}/{team}-Match-Logs-{dic_league.get("leagueName")}'
-                print(url)
-    
+                #print(url)
+                #list function? data function?
+                urllist=urllist.append(url)
+                return urllist
 
 league_dict_module = importlib.import_module('Leage_Teaminfo')
 league_dictionary=dict()
@@ -52,4 +55,4 @@ for atter_name in dir(league_dict_module):
 #Iterate through each dictionary
 for league_dict in league_dictionary:
     league_dict=league_dictionary[league_dict]
-    urlbuilder(seasons, league_dict, Match_Logs_Type)
+    urlbuilderfunc(seasons, league_dict, Match_Logs_Type)

@@ -1,3 +1,18 @@
+
+Teams_and_ID = {
+  "Premier_League": "c9",
+  "La_Liga": "c12",
+  "Serie-A": "c11",
+  "Bundesliga": "c20",
+  "Ligue-1": "c13",
+  "Belgian-Pro-League": "c37",
+  "Serie-a": "c24",
+  "Liga-MX": "c31",
+  "Eredivisie": "c23",
+  "Primeira-Liga": "c32",
+  "Championship": "c10",
+  "Major-League-Soccer": "c22"
+}
 Premier_League_Teams = {
   "leagueID":"c9",
   "leagueName":"Premier-League",

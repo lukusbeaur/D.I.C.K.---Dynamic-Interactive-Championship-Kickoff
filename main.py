@@ -5,6 +5,7 @@ from Dictionary import La_Liga_Teams
 
 
 First_Section= 'https://fbref.com/en/squads/'
+#instead of VAR create a loop that iterates the last numebr of each year and then do it agian but +1
 Current_Season_and_Filler= '/2023-2024/matchlogs/'
 Twenty_Two_Season_and_Filler= '/2022-2023/matchlogs/'
 Premier_League_Number= "c9"

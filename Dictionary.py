@@ -120,7 +120,7 @@ Ligue_1_Teams={
   "Reims": "7fdd64e0",
   "Rennes": "b3072e00",
   "Strasbourg": "c0d3eab4",
-  "Toulouse": "3f8c4b5f",
+  "Toulouse":   "3f8c4b5f",
 }
 Belgian_Pro_League_Teams= {
   "Anderlecht": "08ad393c",

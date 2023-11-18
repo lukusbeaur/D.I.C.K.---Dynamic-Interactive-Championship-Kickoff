@@ -58,6 +58,6 @@ for atter_name in dir(league_dict_module):
 for league_dict in league_dictionary:
     league_dict=league_dictionary[league_dict]
     urlbuilderfunc(seasons, league_dict, Match_Logs_Type)
-#commit
+
 ListDataFrame= pd.DataFrame(URLList)
 ListDataFrame.to_csv('Masterlink.csv', index=False)

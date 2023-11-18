@@ -1,5 +1,6 @@
 from itertools import islice
 import importlib
+import pandas as pd
 #import Leage_Teaminfo
 
 #flow -> function: for loop to create URL
@@ -21,11 +22,11 @@ Match_Logs_Type = {
 }
 def is_dictionary(obj):
     return isinstance(obj,dict)
-
+URLList= []
 def urlbuilderfunc(seasons, dic_league, logtypes):
     First_Section= 'https://fbref.com/en/squads/'
     Match_Logs= '-Match-Logs-'
-    urllist=[]
+
     #we want to skip the first 2 lines because we embedded some metadata there (I.E)
     iterator = iter(dic_league.items())
 
@@ -41,8 +42,9 @@ def urlbuilderfunc(seasons, dic_league, logtypes):
                 url= f'{First_Section}{teamID}/{season}/{dic_league.get("leagueID")}/{type}/{team}-Match-Logs-{dic_league.get("leagueName")}'
                 #print(url)
                 #list function? data function?
-                urllist=urllist.append(url)
-                return urllist
+                URLList.append(url)
+
+
 
 league_dict_module = importlib.import_module('Leage_Teaminfo')
 league_dictionary=dict()
@@ -56,3 +58,6 @@ for atter_name in dir(league_dict_module):
 for league_dict in league_dictionary:
     league_dict=league_dictionary[league_dict]
     urlbuilderfunc(seasons, league_dict, Match_Logs_Type)
+
+ListDataFrame= pd.DataFrame(URLList)
+ListDataFrame.to_csv('Masterlink.csv', index=False)

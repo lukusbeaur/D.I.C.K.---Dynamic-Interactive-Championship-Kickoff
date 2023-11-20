@@ -54,7 +54,7 @@ Serie_A_Teams= {
   "Calgliari": "c4260e09",
   "Empoli": "a3d88bd8",
   "Fiorentina": "421387cf",
-  "Frosinone": "6a7ad59d,",
+  "Frosinone": "6a7ad59d",
   "Genoa": "658bf2de",
   "Hellas-Verona": "0e72edf2",
   "Internazionale": "d609edc0",

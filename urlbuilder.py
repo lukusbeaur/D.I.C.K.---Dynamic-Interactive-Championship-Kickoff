@@ -14,7 +14,7 @@ Match_Logs_Type = {
   "Shooting": "shooting",
   "keeping": "keeper",
   "Passing": "passing",
-  "pass type": "passing_type",
+  "pass type": "passing_types",
   "GCA": "gca",
   "Defensive_actions": "defense",
   "Possession": "possession",
@@ -32,17 +32,17 @@ def urlbuilderfunc(seasons, dic_league, logtypes):
 
     #loop outer-inner: Seasons, leagues, team, logtype
     #TODO: 11/16/23 figure out way to add the league data but not interate through the loop 
-    for season in seasons:
+    #for season in seasons:
         #for leagueID, leaguename in leagues.items():
-        for team, teamID in islice(iterator, 2, None):
-            #skipping first 2 lines of dictionary 
-            for type in logtypes.values():
+    for team, teamID in islice(iterator, 2, None):
+        #skipping first 2 lines of dictionary
+        for type in logtypes.values():
 #Example url https://fbref.com/en/squads/361ca564/2023-2024/matchlogs/c9/shooting/Tottenham-Hotspur-Match-Logs-Premier-League
 #            |      First_Section       |Team ID |   Year & Filler   |L#| M_L_T  | Team_Name      | Filler   | League Name  |
-                url= f'{First_Section}{teamID}/{season}/{dic_league.get("leagueID")}/{type}/{team}-Match-Logs-{dic_league.get("leagueName")}'
-                #print(url)
-                #list function? data function?
-                URLList.append(url)
+            url= f'{First_Section}{teamID}/2022-2023/matchlogs/{dic_league.get("leagueID")}/{type}/{team}-Match-Logs-{dic_league.get("leagueName")}'
+            #print(url)
+            #list function? data function?
+            URLList.append(url)
 
 
 
@@ -60,4 +60,4 @@ for league_dict in league_dictionary:
     urlbuilderfunc(seasons, league_dict, Match_Logs_Type)
 
 ListDataFrame= pd.DataFrame(URLList)
-ListDataFrame.to_csv('Masterlink.csv', index=False)
+ListDataFrame.to_csv('Masterlink2022-2023.csv', index=False)

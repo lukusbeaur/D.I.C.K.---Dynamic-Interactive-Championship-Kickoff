@@ -12,79 +12,64 @@ import (
 	//"github.com/gocolly/colly/debug"
 )
 
-// TODO: create timer and total data pulled variables and implement them into code
+// TODO: create timer and total data pulled variables and implement them into code----->
 func main() {
-	file, err := os.Open("C:/Users/lukus/Documents/DICK/Masterlink.csv")
-	if err != nil {
-		log.Fatalf("Unable to locate or open file: %s\n", err)
-	}
+	//Open tracker CSV file for URL. This will track where you are in the main list
+	//and if there is an interuption the loop will start on the last saved URL -------->
+
+	//Open Main CSV file for urls. Handle errors encapsulated in openfileandReadAll
+	//Create a reader for the main CSV file, Save all records for iteration------------>
+	file, reader := openFileReadAll("C:/Users/lukus/Documents/DICK/Masterlink.csv")
 	defer file.Close()
-	//reader for getting csvs form master link
-	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
 		log.Fatalf("Unable to read file: %s", err)
 	}
-	//for each url do the thing
-	//TODO create an if statement that if there is a URL inside the left off file than search
-	//cont: for index of that url in the master link file and start loop from there.
+	//TODO create an if statement that if there is a URL inside the left off file than
+	//cont: searchfor index of that url in the master link file and start loop from there.
+	//Iterate through the records readall object. for each URL in the object scrape the
+	//table and save it to the 'Datatype_teamname.csv ---------------------------------->
 	for _, record := range records {
 		url := record[0]
+		//track current URL here
+		writeCurrentURL(url, "C:/Users/lukus/Documents/DICK/last_URL.csv")
 		fmt.Println("Processing URL:", url)
-
 		scrapeURL(url)
 	}
 
 }
 func scrapeURL(url string) {
-	//fmt.Println(url)
 	//TODO: add regex to find the dates too
 	//TODO add regex into function
 	//find team name and data type inside URL
 	re := regexp.MustCompile(`/([a-z_]+)/([^/]+)-Match-Logs-`)
 	match := re.FindStringSubmatch(url)
 	var teamName, dataType string
-	//TODO: create the writer functions to be dynamic, inside a function
-	//init the csv file writer------------------------------------------>
+	//DONE: create the writer functions to be dynamic, inside a function
+	//TODO: create files in the local directory  insdie new folder. remove direct dir
+	//cont: replacte with relative dir.
+	//init the csv file writer and create files. Writer: for URL table data, fwriter to
+	//cont: keep track of any errors on regex errors  ---------------------------------->
 	dir := "C:/Users/lukus/Documents/DICK/TeamData"
-	fName := fmt.Sprintf("%s/%s-%s.csv", dir, teamName, dataType)
-	//create writer for Team Data,
-
-	createFile(fName)
-	/*file, err := os.Create(fName)
-	if err != nil {
-		log.Fatalf("Unable to create file %q: %s\n", fName, err)
-	}
-	*/
-	writer := csv.NewWriter(file)
+	_, writer := createFile(fmt.Sprintf("%s/%s-%s.csv", dir, teamName, dataType))
 	defer writer.Flush()
-	//create writer for failed team data------------------------------->
-	createFile(fName)
-	failfName := fmt.Sprintf("%s/url_Failure.csv", dir)
-	/*failfile, err := os.Create(failfName)
-	if err != nil {
-		log.Fatalf("Unable to create file %q: %s\n", fName, err)
-	}
-	*/
-	failwriter := csv.NewWriter(failfile)
-	defer failwriter.Flush()
+
 	//TODO: create function to handle the failedwriter issue
 	//TODO: create function to capture last URL used, put in file.
-	//if regex fails to pull team name or data type from url------------->
+	//if regex fails to pull team name or data type from url it is placed in an error
+	//File. To keep track of potential erros. ------------------------------------------>
 	if len(match) > 2 {
 		teamName = match[2]
 		dataType = match[1]
 	} else {
 		teamName = "Teamname"
 		dataType = "Datatype"
-		if err := failwriter.Write([]string{url}); err != nil {
-			log.Fatalf("Unable to write to file : %s\n", err)
-		}
+		appendToFile(fmt.Sprintf("%s/url_Failure.csv", dir), []string{url})
+		fmt.Printf("Failed to extract data from URL: %s\n", url)
 	}
 	fmt.Println("Extracted data type:", dataType)
 	fmt.Println("Extracted team name:", teamName)
 
-	defer writer.Flush()
 	//START: initiate a collector object
 	c := colly.NewCollector(
 		colly.AllowedDomains("fbref.com"),
@@ -122,10 +107,7 @@ func scrapeURL(url string) {
 		rowIndex := 0
 		e.ForEach("tr", func(_ int, row *colly.HTMLElement) {
 			var rowData []string
-			//dataRow := row.Attr("data-row")
-			//classRow := row.Attr("class")
 			parentTag := row.DOM.Parent().Nodes[0].Data
-			//fmt.Printf("currently on Class: %s\nrowData: %s\n", classRow, dataRow)
 
 			if rowIndex == 0 {
 				rowIndex++
@@ -155,16 +137,58 @@ func scrapeURL(url string) {
 	})
 	c.Wait()
 	//start and check for error
-	err = c.Visit(url)
+	err := c.Visit(url)
 	if err != nil {
 		fmt.Println("Error visiting the site:", err)
 	}
 }
-func createFile(filepath string) *os.File {
+func createFile(filepath string) (*os.File, *csv.Writer) {
 	file, err := os.Create(filepath)
 	if err != nil {
 		log.Fatalf("Unable to create file %q: %s\n", filepath, err)
 	}
-	return file
+	writer := csv.NewWriter(file)
+	return file, writer
 }
-func write
+func writeRecord(writer *csv.Writer, record []string) {
+	if err := writer.Write(record); err != nil {
+		log.Fatalf("Unable to write record to file :%s\n", err)
+	}
+	writer.Flush()
+}
+func openFileReadAll(filepath string) (*os.File, *csv.Reader) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		log.Fatalf("Unable to open or locate file: %s\n", err)
+	}
+	reader := csv.NewReader(file)
+	if err != nil {
+		log.Fatalf("Unable to read file: %s", err)
+	}
+	return file, reader
+}
+func writeCurrentURL(record, filepath string) {
+	//Create file, _ file object, returns writer object. this will overwrite ---------->
+	file, writer := createFile(filepath)
+	defer file.Close()
+	defer writer.Flush()
+	//write records to file' WriteRecord only works with arrays, so you musth convert-->
+	records := []string{record}
+	writeRecord(writer, records)
+}
+func appendFileAndWriter(filePath string) (*os.File, *csv.Writer) {
+	//This will open file and append lines instead of overwriting it ------------------>
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Unable to open file %q: %s\n", filePath, err)
+	}
+	writer := csv.NewWriter(file)
+	return file, writer
+}
+func appendToFile(filepath string, record []string) {
+	file, writer := appendFileAndWriter(filepath)
+	defer file.Close()
+	defer writer.Flush()
+
+	writeRecord(writer, record)
+}

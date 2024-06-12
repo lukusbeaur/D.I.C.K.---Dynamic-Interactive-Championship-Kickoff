@@ -14,6 +14,8 @@ import (
 
 // TODO: create timer and total data pulled variables and implement them into code----->
 func main() {
+	starttime := time.Now()
+	elapsedTime := time.Since((starttime))
 	//Open tracker CSV file for URL. This will track where you are in the main list
 	//and if there is an interuption the loop will start on the last saved URL -------->
 
@@ -29,6 +31,7 @@ func main() {
 	//cont: searchfor index of that url in the master link file and start loop from there.
 	//Iterate through the records readall object. for each URL in the object scrape the
 	//table and save it to the 'Datatype_teamname.csv ---------------------------------->
+	fmt.Printf("The time is %s. Starting to pull data\n", starttime)
 	for _, record := range records {
 		url := record[0]
 		//track current URL here
@@ -36,39 +39,53 @@ func main() {
 		fmt.Println("Processing URL:", url)
 		scrapeURL(url)
 	}
-
+	//TODO: create a graceful shutdown function. Channels, SIGS, and <- make.
+	fmt.Printf("Total Elapsed time: %s\n", elapsedTime)
 }
 func scrapeURL(url string) {
+	var teamName, dataType, season string
 	//TODO: add regex to find the dates too
 	//TODO add regex into function
 	//find team name and data type inside URL
 	re := regexp.MustCompile(`/([a-z_]+)/([^/]+)-Match-Logs-`)
+	dateRe := regexp.MustCompile(`\b(\d{4}(?:-\d{4})?)\b`)
 	match := re.FindStringSubmatch(url)
-	var teamName, dataType string
-	//DONE: create the writer functions to be dynamic, inside a function
+	dmatch := dateRe.FindStringSubmatch(url)
+
+	//DONE: create function to handle the failedwriter issue
+	//DONE/ Checked/ Remove line on next commit: create function to capture last URL used, put in file.
+	//if regex fails to pull team name or data type from url it is placed in an error
+	//File. To keep track of potential erros. ------------------------------------------>
+	if len(match) > 2 && len(dmatch) > 1 {
+		teamName = match[2]
+		dataType = match[1]
+		season = dmatch[1]
+	} else {
+		teamName = "Teamname_error"
+		dataType = "Datatype_error"
+		season = "seasonDate_error"
+		dir := "C:/Users/lukus/Documents/DICK/TeamData"
+		appendToFile(fmt.Sprintf("%s/url_Failure.csv", dir), []string{url})
+		fmt.Printf("Failed to extract data from URL: %s\n", url)
+		return
+	}
+	fmt.Printf("The season folder being made is %s\n", season)
+	fmt.Println("Extracted data type:", dataType)
+	fmt.Println("Extracted team name:", teamName)
+	fmt.Println("Extracted season Date:", season)
+
+	//DONE, checked, remove line on next commit: create the writer functions to be dynamic, inside a function
 	//TODO: create files in the local directory  insdie new folder. remove direct dir
 	//cont: replacte with relative dir.
 	//init the csv file writer and create files. Writer: for URL table data, fwriter to
 	//cont: keep track of any errors on regex errors  ---------------------------------->
-	dir := "C:/Users/lukus/Documents/DICK/TeamData"
-	_, writer := createFile(fmt.Sprintf("%s/%s-%s.csv", dir, teamName, dataType))
-	defer writer.Flush()
-
-	//TODO: create function to handle the failedwriter issue
-	//TODO: create function to capture last URL used, put in file.
-	//if regex fails to pull team name or data type from url it is placed in an error
-	//File. To keep track of potential erros. ------------------------------------------>
-	if len(match) > 2 {
-		teamName = match[2]
-		dataType = match[1]
-	} else {
-		teamName = "Teamname"
-		dataType = "Datatype"
-		appendToFile(fmt.Sprintf("%s/url_Failure.csv", dir), []string{url})
-		fmt.Printf("Failed to extract data from URL: %s\n", url)
+	dir := fmt.Sprintf("C:/Users/lukus/Documents/DICK/TeamData/%s/", season)
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("unable to create directory %q: %s\n", dir, err)
 	}
-	fmt.Println("Extracted data type:", dataType)
-	fmt.Println("Extracted team name:", teamName)
+	_, writer := createFile(fmt.Sprintf("%s%s-%s.csv", dir, teamName, dataType))
+	defer writer.Flush()
 
 	//START: initiate a collector object
 	c := colly.NewCollector(
@@ -121,23 +138,17 @@ func scrapeURL(url string) {
 				return
 			}
 			row.ForEach("th, td", func(_ int, cell *colly.HTMLElement) {
-				//ok this should create the header. lets try
-				//fmt.Println(rowIndex)
-				//for now I removed the if statement ot see wtf is going on
 				rowData = append(rowData, cell.Text)
 
 			})
 
-			err := writer.Write(rowData)
-			if err != nil {
-				log.Fatalf("Unable to write data to file: %s\n", err)
-			}
+			writeRecord(writer, rowData)
 			rowIndex++
 		})
 	})
 	c.Wait()
 	//start and check for error
-	err := c.Visit(url)
+	err = c.Visit(url)
 	if err != nil {
 		fmt.Println("Error visiting the site:", err)
 	}

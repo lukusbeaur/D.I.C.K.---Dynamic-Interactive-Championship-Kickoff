@@ -12,10 +12,10 @@ import (
 	//"github.com/gocolly/colly/debug"
 )
 
-// TODO: create timer and total data pulled variables and implement them into code----->
+// PARTIAL DONE: create timer and total data pulled variables and implement them into
+// code. Need to make a call back variable to get total DATA pulled --------------------->
 func main() {
 	starttime := time.Now()
-	elapsedTime := time.Since((starttime))
 	//Open tracker CSV file for URL. This will track where you are in the main list
 	//and if there is an interuption the loop will start on the last saved URL -------->
 
@@ -27,7 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to read file: %s", err)
 	}
-	//TODO create an if statement that if there is a URL inside the left off file than
+	//TODO create an if statement that if there is a URL inside the left off file then
 	//cont: searchfor index of that url in the master link file and start loop from there.
 	//Iterate through the records readall object. for each URL in the object scrape the
 	//table and save it to the 'Datatype_teamname.csv ---------------------------------->
@@ -40,13 +40,14 @@ func main() {
 		scrapeURL(url)
 	}
 	//TODO: create a graceful shutdown function. Channels, SIGS, and <- make.
+	elapsedTime := time.Since((starttime))
 	fmt.Printf("Total Elapsed time: %s\n", elapsedTime)
 }
 func scrapeURL(url string) {
 	var teamName, dataType, season string
-	//TODO: add regex to find the dates too
-	//TODO add regex into function
-	//find team name and data type inside URL
+	//DONE/ Checked/ Remove Line on next Commit: add regex to find the dates too
+	//Not Doing this/ Remove Line on Next commit: add regex into function
+	//find team name and data type inside URL------------------------------------------>
 	re := regexp.MustCompile(`/([a-z_]+)/([^/]+)-Match-Logs-`)
 	dateRe := regexp.MustCompile(`\b(\d{4}(?:-\d{4})?)\b`)
 	match := re.FindStringSubmatch(url)
@@ -69,7 +70,6 @@ func scrapeURL(url string) {
 		fmt.Printf("Failed to extract data from URL: %s\n", url)
 		return
 	}
-	fmt.Printf("The season folder being made is %s\n", season)
 	fmt.Println("Extracted data type:", dataType)
 	fmt.Println("Extracted team name:", teamName)
 	fmt.Println("Extracted season Date:", season)
@@ -118,7 +118,7 @@ func scrapeURL(url string) {
 		RandomDelay: 3 * time.Second,
 	})
 
-	//search for table and pull data, putting into CSV------------------------------>
+	//search for table and pull data, putting into CSV---------------------------------->
 	c.OnHTML("#matchlogs_for", func(e *colly.HTMLElement) {
 		//i need to keep track of the rows and columns for easy parcing.
 		rowIndex := 0

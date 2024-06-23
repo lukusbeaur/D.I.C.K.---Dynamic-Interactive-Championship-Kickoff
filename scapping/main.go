@@ -5,56 +5,71 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gocolly/colly"
 	//"github.com/gocolly/colly/debug"
 )
 
-// PARTIAL DONE: create timer and total data pulled variables and implement them into
-// code. Need to make a call back variable to get total DATA pulled --------------------->
+// DONE Check, and Delete Next Commit: create timer and total data pulled variables and
+// implement them into
+// code. Need to make a call back variable to get total DATA pulled -------------------->
 func main() {
 	starttime := time.Now()
+	var totalsize int
+
+	csvfiles, err := scanCSVFiles("../links/")
+	if err != nil {
+		log.Fatalf("Error scaning for CSV files: %s", err)
+	}
+	for _, csvfilepath := range csvfiles {
+		file, reader := openFileReadAll(csvfilepath)
+		defer file.Close()
+		records, err := reader.ReadAll()
+		if err != nil {
+			log.Fatalf("Unable to read file %s:%s", csvfilepath, err)
+		}
+		fmt.Printf("Working form %s", csvfilepath)
+		for _, record := range records {
+			url := record[0]
+			//track current URL here
+			writeCurrentURL(url, "../last_URL.csv")
+			fmt.Println("Processing URL:", url)
+			totalsize += scrapeURL(url)
+		}
+	}
 	//Open tracker CSV file for URL. This will track where you are in the main list
 	//and if there is an interuption the loop will start on the last saved URL -------->
-
 	//Open Main CSV file for urls. Handle errors encapsulated in openfileandReadAll
 	//Create a reader for the main CSV file, Save all records for iteration------------>
-	file, reader := openFileReadAll("C:/Users/lukus/Documents/DICK/Masterlink.csv")
-	defer file.Close()
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Fatalf("Unable to read file: %s", err)
-	}
+	//file, reader := openFileReadAll("../Masterlink.csv")
+	//file, reader := openFileReadAll("../links/Brazil_Links_2024.csv")
+	//file, reader := openFileReadAll("../Brazil_Links.csv")
+	//defer file.Close()
+	//records, err := reader.ReadAll()
+	//if err != nil {
+	//	log.Fatalf("Unable to read file: %s", err)
+	//}
 	//TODO create an if statement that if there is a URL inside the left off file then
 	//cont: searchfor index of that url in the master link file and start loop from there.
 	//Iterate through the records readall object. for each URL in the object scrape the
 	//table and save it to the 'Datatype_teamname.csv ---------------------------------->
 	fmt.Printf("The time is %s. Starting to pull data\n", starttime)
-	for _, record := range records {
-		url := record[0]
-		//track current URL here
-		writeCurrentURL(url, "C:/Users/lukus/Documents/DICK/last_URL.csv")
-		fmt.Println("Processing URL:", url)
-		scrapeURL(url)
-	}
 	//TODO: create a graceful shutdown function. Channels, SIGS, and <- make.
 	elapsedTime := time.Since((starttime))
 	fmt.Printf("Total Elapsed time: %s\n", elapsedTime)
+	fmt.Printf("Total data collected: %d\n", totalsize)
 }
-func scrapeURL(url string) {
+func scrapeURL(url string) (totalsize int) {
 	var teamName, dataType, season string
-	//DONE/ Checked/ Remove Line on next Commit: add regex to find the dates too
-	//Not Doing this/ Remove Line on Next commit: add regex into function
 	//find team name and data type inside URL------------------------------------------>
 	re := regexp.MustCompile(`/([a-z_]+)/([^/]+)-Match-Logs-`)
 	dateRe := regexp.MustCompile(`\b(\d{4}(?:-\d{4})?)\b`)
 	match := re.FindStringSubmatch(url)
 	dmatch := dateRe.FindStringSubmatch(url)
-
-	//DONE: create function to handle the failedwriter issue
-	//DONE/ Checked/ Remove line on next commit: create function to capture last URL used, put in file.
 	//if regex fails to pull team name or data type from url it is placed in an error
 	//File. To keep track of potential erros. ------------------------------------------>
 	if len(match) > 2 && len(dmatch) > 1 {
@@ -65,7 +80,7 @@ func scrapeURL(url string) {
 		teamName = "Teamname_error"
 		dataType = "Datatype_error"
 		season = "seasonDate_error"
-		dir := "C:/Users/lukus/Documents/DICK/TeamData"
+		dir := "../TeamData"
 		appendToFile(fmt.Sprintf("%s/url_Failure.csv", dir), []string{url})
 		fmt.Printf("Failed to extract data from URL: %s\n", url)
 		return
@@ -74,12 +89,11 @@ func scrapeURL(url string) {
 	fmt.Println("Extracted team name:", teamName)
 	fmt.Println("Extracted season Date:", season)
 
-	//DONE, checked, remove line on next commit: create the writer functions to be dynamic, inside a function
-	//TODO: create files in the local directory  insdie new folder. remove direct dir
+	//DONE. Checked - delete todo on next commit: create files in the local directory  insdie new folder. remove direct dir
 	//cont: replacte with relative dir.
 	//init the csv file writer and create files. Writer: for URL table data, fwriter to
 	//cont: keep track of any errors on regex errors  ---------------------------------->
-	dir := fmt.Sprintf("C:/Users/lukus/Documents/DICK/TeamData/%s/", season)
+	dir := fmt.Sprintf("../../TeamData/%s/", season)
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		log.Fatalf("unable to create directory %q: %s\n", dir, err)
@@ -115,7 +129,7 @@ func scrapeURL(url string) {
 	c.Limit(&colly.LimitRule{
 		DomainGlob:  "fbref.com",
 		Parallelism: 1,
-		RandomDelay: 3 * time.Second,
+		RandomDelay: 10*time.Second + 10,
 	})
 
 	//search for table and pull data, putting into CSV---------------------------------->
@@ -146,12 +160,14 @@ func scrapeURL(url string) {
 			rowIndex++
 		})
 	})
-	c.Wait()
+	fmt.Println("")
 	//start and check for error
 	err = c.Visit(url)
 	if err != nil {
 		fmt.Println("Error visiting the site:", err)
 	}
+	c.Wait()
+	return requestSize
 }
 func createFile(filepath string) (*os.File, *csv.Writer) {
 	file, err := os.Create(filepath)
@@ -202,4 +218,17 @@ func appendToFile(filepath string, record []string) {
 	defer writer.Flush()
 
 	writeRecord(writer, record)
+}
+func scanCSVFiles(dir string) ([]string, error) {
+	var csvFiles []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".csv") {
+			csvFiles = append(csvFiles, path)
+		}
+		return nil
+	})
+	return csvFiles, err
 }

@@ -25,34 +25,66 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error scaning for CSV files: %s", err)
 	}
-	for _, csvfilepath := range csvfiles {
-		file, reader := openFileReadAll(csvfilepath)
+	//Check last_URL for record != 'end' -> loop through main CSV file. Else Find index
+	//of the last URL inside main CSV file. start loop from there. --------------------->
+	file, reader := openFileReadAll("../last_URL.csv")
+	defer file.Close()
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Fatalf("Unable to read the record form the file %s", err)
+		return
+	}
+	if records[0][0] == "end" {
+		fmt.Println("Starting fresh....")
+		for _, csvfilepath := range csvfiles {
+			file, reader := openFileReadAll(csvfilepath)
+			defer file.Close()
+			records, err := reader.ReadAll()
+			if err != nil {
+				log.Fatalf("Unable to read file %s:%s", csvfilepath, err)
+			}
+			fmt.Printf("Working form %s", csvfilepath)
+
+			for _, record := range records {
+				url := record[0]
+				//track current URL here
+				writeCurrentURL(url, "../last_URL.csv", []string{file.Name()})
+				fmt.Println("Processing URL:", url)
+				totalsize += scrapeURL(url)
+			}
+		}
+	} else {
+		//find the index of record[0][0] The URL inside record[0][1] The file name and
+		// path: This will find the index in which the loop will start with------------->
+		fmt.Printf("We are picking back up with %s on url %s\n", records[1][0], records[0][0])
+		index, err := findLineIndex(records[1][0], records[0][0])
+		if err != nil {
+			log.Fatalf("There was an error with accessing the CSV %v", err)
+			return
+		}
+		file, reader := openFileReadAll(records[1][0])
 		defer file.Close()
 		records, err := reader.ReadAll()
 		if err != nil {
-			log.Fatalf("Unable to read file %s:%s", csvfilepath, err)
+			log.Fatalf("There was an error reading the csv data %v", err)
+			return
 		}
-		fmt.Printf("Working form %s", csvfilepath)
-		for _, record := range records {
-			url := record[0]
+		for i := index; i < len(records); i++ {
+
+			url := records[i][0]
 			//track current URL here
-			writeCurrentURL(url, "../last_URL.csv")
+			writeCurrentURL(url, "../last_URL.csv", []string{file.Name()})
 			fmt.Println("Processing URL:", url)
 			totalsize += scrapeURL(url)
 		}
 	}
+
+	fmt.Println("This if statement worked, it detected an 'end'")
+
 	//Open tracker CSV file for URL. This will track where you are in the main list
 	//and if there is an interuption the loop will start on the last saved URL -------->
 	//Open Main CSV file for urls. Handle errors encapsulated in openfileandReadAll
 	//Create a reader for the main CSV file, Save all records for iteration------------>
-	//file, reader := openFileReadAll("../Masterlink.csv")
-	//file, reader := openFileReadAll("../links/Brazil_Links_2024.csv")
-	//file, reader := openFileReadAll("../Brazil_Links.csv")
-	//defer file.Close()
-	//records, err := reader.ReadAll()
-	//if err != nil {
-	//	log.Fatalf("Unable to read file: %s", err)
-	//}
 	//TODO create an if statement that if there is a URL inside the left off file then
 	//cont: searchfor index of that url in the master link file and start loop from there.
 	//Iterate through the records readall object. for each URL in the object scrape the
@@ -194,7 +226,7 @@ func openFileReadAll(filepath string) (*os.File, *csv.Reader) {
 	}
 	return file, reader
 }
-func writeCurrentURL(record, filepath string) {
+func writeCurrentURL(record, filepath string, curfile []string) {
 	//Create file, _ file object, returns writer object. this will overwrite ---------->
 	file, writer := createFile(filepath)
 	defer file.Close()
@@ -202,6 +234,7 @@ func writeCurrentURL(record, filepath string) {
 	//write records to file' WriteRecord only works with arrays, so you musth convert-->
 	records := []string{record}
 	writeRecord(writer, records)
+	writeRecord(writer, curfile)
 }
 func appendFileAndWriter(filePath string) (*os.File, *csv.Writer) {
 	//This will open file and append lines instead of overwriting it ------------------>
@@ -231,4 +264,21 @@ func scanCSVFiles(dir string) ([]string, error) {
 		return nil
 	})
 	return csvFiles, err
+}
+func findLineIndex(filePath, value string) (int, error) {
+	file, reader := openFileReadAll(filePath)
+	defer file.Close()
+	records, err := reader.ReadAll()
+	if err != nil {
+		return -1, fmt.Errorf("unable to read CSV data: %v", err)
+	}
+	for i, record := range records {
+		for _, field := range record {
+			if field == value {
+				return i, nil
+			}
+		}
+
+	}
+	return -1, fmt.Errorf("Unable to find CSV")
 }

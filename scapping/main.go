@@ -14,9 +14,6 @@ import (
 	//"github.com/gocolly/colly/debug"
 )
 
-// DONE Check, and Delete Next Commit: create timer and total data pulled variables and
-// implement them into
-// code. Need to make a call back variable to get total DATA pulled -------------------->
 func main() {
 	starttime := time.Now()
 	var totalsize int
@@ -85,7 +82,7 @@ func main() {
 	//and if there is an interuption the loop will start on the last saved URL -------->
 	//Open Main CSV file for urls. Handle errors encapsulated in openfileandReadAll
 	//Create a reader for the main CSV file, Save all records for iteration------------>
-	//TODO create an if statement that if there is a URL inside the left off file then
+	//DONE, Checked. Remove on next push. create an if statement that if there is a URL inside the left off file then
 	//cont: searchfor index of that url in the master link file and start loop from there.
 	//Iterate through the records readall object. for each URL in the object scrape the
 	//table and save it to the 'Datatype_teamname.csv ---------------------------------->
@@ -121,8 +118,6 @@ func scrapeURL(url string) (totalsize int) {
 	fmt.Println("Extracted team name:", teamName)
 	fmt.Println("Extracted season Date:", season)
 
-	//DONE. Checked - delete todo on next commit: create files in the local directory  insdie new folder. remove direct dir
-	//cont: replacte with relative dir.
 	//init the csv file writer and create files. Writer: for URL table data, fwriter to
 	//cont: keep track of any errors on regex errors  ---------------------------------->
 	dir := fmt.Sprintf("../../TeamData/%s/", season)
@@ -136,6 +131,7 @@ func scrapeURL(url string) (totalsize int) {
 	//START: initiate a collector object
 	c := colly.NewCollector(
 		colly.AllowedDomains("fbref.com"),
+		colly.ParseHTTPErrorResponse(),
 		//colly.Async(true),
 		//colly.Debugger(&debug.LogDebugger{}),
 	)
@@ -150,6 +146,16 @@ func scrapeURL(url string) (totalsize int) {
 	//on response lets check size of data
 	c.OnResponse(func(r *colly.Response) {
 		requestSize += len(r.Body)
+		fmt.Printf("Status code: %d\n", r.StatusCode)
+		//If there is a status code other than 200 (OK) then add the URL to the error
+		//list url_Failure.csv---------------------------------------------------------->
+		if r.StatusCode != 200 {
+			fmt.Printf("Status code mustnt be 200 right: %d\n", r.StatusCode)
+			appendToFile("../url_Failure.csv", []string{url})
+			writer.Write([]string{url})
+		} else {
+			fmt.Printf("Status code must be 200 right: %d", r.StatusCode)
+		}
 	})
 	c.OnScraped(func(r *colly.Response) {
 		elapsedTime := time.Since((startTime))

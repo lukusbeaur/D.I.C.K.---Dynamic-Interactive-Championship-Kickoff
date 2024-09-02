@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/proxy"
 	//"github.com/gocolly/colly/debug"
 )
 
@@ -53,7 +54,7 @@ func main() {
 	} else {
 		//find the index of record[0][0] The URL inside record[0][1] The file name and
 		// path: This will find the index in which the loop will start with------------->
-		fmt.Printf("We are picking back up with %s on url %s\n", records[1][0], records[0][0])
+		fmt.Printf("Cont: %s on url %s\n", records[1][0], records[0][0])
 		index, err := findLineIndex(records[1][0], records[0][0])
 		if err != nil {
 			log.Fatalf("There was an error with accessing the CSV %v", err)
@@ -114,9 +115,9 @@ func scrapeURL(url string) (totalsize int) {
 		fmt.Printf("Failed to extract data from URL: %s\n", url)
 		return
 	}
-	fmt.Println("Extracted data type:", dataType)
-	fmt.Println("Extracted team name:", teamName)
-	fmt.Println("Extracted season Date:", season)
+	//fmt.Println("Extracted data type:", dataType)
+	//fmt.Println("Extracted team name:", teamName)
+	//fmt.Println("Extracted season Date:", season)
 
 	//init the csv file writer and create files. Writer: for URL table data, fwriter to
 	//cont: keep track of any errors on regex errors  ---------------------------------->
@@ -135,6 +136,13 @@ func scrapeURL(url string) (totalsize int) {
 		//colly.Async(true),
 		//colly.Debugger(&debug.LogDebugger{}),
 	)
+	//Trying to add a proxy and my internal network.
+	rp, err := proxy.RoundRobinProxySwitcher("http://185.133.250.195:8888", "0.0.0.0", "")
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.SetProxyFunc(rp)
+
 	var startTime time.Time
 	var requestSize int
 	//lets try and connect first and print the call back of the request
@@ -142,6 +150,7 @@ func scrapeURL(url string) (totalsize int) {
 	c.OnRequest(func(r *colly.Request) {
 		startTime = time.Now()
 		fmt.Println("Visiting:", r.URL.String())
+		fmt.Printf("Proxy: %s\n", r.ProxyURL)
 	})
 	//on response lets check size of data
 	c.OnResponse(func(r *colly.Response) {
@@ -153,8 +162,8 @@ func scrapeURL(url string) (totalsize int) {
 			fmt.Printf("Status code mustnt be 200 right: %d\n", r.StatusCode)
 			appendToFile("../url_Failure.csv", []string{url})
 			writer.Write([]string{url})
-		} else {
-			fmt.Printf("Status code must be 200 right: %d", r.StatusCode)
+			//} else {
+			//	fmt.Printf("Status code must be 200 right: %d", r.StatusCode)
 		}
 	})
 	c.OnScraped(func(r *colly.Response) {

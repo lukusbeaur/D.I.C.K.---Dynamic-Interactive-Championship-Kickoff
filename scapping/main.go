@@ -4,6 +4,9 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math/rand"
+	"net/http"
+	u "net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
-	"github.com/gocolly/colly/proxy"
 	//"github.com/gocolly/colly/debug"
 )
 
@@ -23,6 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error scaning for CSV files: %s", err)
 	}
+
 	//Check last_URL for record != 'end' -> loop through main CSV file. Else Find index
 	//of the last URL inside main CSV file. start loop from there. --------------------->
 	file, reader := openFileReadAll("../last_URL.csv")
@@ -47,7 +50,7 @@ func main() {
 				url := record[0]
 				//track current URL here
 				writeCurrentURL(url, "../last_URL.csv", []string{file.Name()})
-				LogMessage("INFO", "Processing URL:"+url, nil)
+				//LogMessage("INFO", "Processing URL:"+url, nil)
 				//fmt.Println("Processing URL:", url)
 				totalsize += scrapeURL(url)
 			}
@@ -75,6 +78,7 @@ func main() {
 
 			url := records[i][0]
 			//track current URL here
+
 			writeCurrentURL(url, "../last_URL.csv", []string{file.Name()})
 			LogMessage("INFO", "Processing URL"+url, nil)
 			//fmt.Println("Processing URL:", url)
@@ -102,6 +106,7 @@ func main() {
 }
 func scrapeURL(url string) (totalsize int) {
 	var teamName, dataType, season string
+	LogMessage("INFO", "Start new URL", nil)
 	//find team name and data type inside URL------------------------------------------>
 	re := regexp.MustCompile(`/([a-z_]+)/([^/]+)-Match-Logs-`)
 	dateRe := regexp.MustCompile(`\b(\d{4}(?:-\d{4})?)\b`)
@@ -117,8 +122,8 @@ func scrapeURL(url string) (totalsize int) {
 		teamName = "Teamname_error"
 		dataType = "Datatype_error"
 		season = "seasonDate_error"
-		dir := "../TeamData"
-		appendToFile(fmt.Sprintf("%s/url_Failure.csv", dir), []string{url})
+		//dir := "../TeamData"
+		appendToFile("../links/url_Failure.csv", []string{url})
 		//fmt.Printf("Failed to extract data from URL: %s\n", url)
 		LogMessage("ERROR", "Failed to extract all info from URL"+url, nil)
 		return
@@ -139,7 +144,7 @@ func scrapeURL(url string) (totalsize int) {
 	defer writer.Flush()
 
 	//START: initiate a collector object
-	LogMessage("INFO", "Started new collector for fbref.com", nil)
+	//LogMessage("INFO", "Started new collector for fbref.com", nil)
 	c := colly.NewCollector(
 		colly.AllowedDomains("fbref.com"),
 		colly.ParseHTTPErrorResponse(),
@@ -147,22 +152,43 @@ func scrapeURL(url string) (totalsize int) {
 		//colly.Debugger(&debug.LogDebugger{}),
 	)
 	//Trying to add a proxy and my internal network.
-	rp, err := proxy.RoundRobinProxySwitcher("http://185.133.250.195:8888", "0.0.0.0", "")
-	if err != nil {
-		log.Fatal(err)
-	}
-	c.SetProxyFunc(rp)
-	LogMessage("INFO", "Proxies have been set.", nil)
+	//rp, err := proxy.RoundRobinProxySwitcher("192.168.1.203") //"http://185.133.250.195:8888",
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//c.SetProxyFunc(rp)
+	//LogMessage("INFO", "Proxies have been set.", nil)
 	var startTime time.Time
 	var requestSize int
 	//lets try and connect first and print the call back of the request
 	//Start timer
+	proxies := []string{
+		"http://185.133.250.195:8888",
+		"",
+	}
+	c.WithTransport(&http.Transport{
+		Proxy: func(req *http.Request) (*u.URL, error) {
+			proxyStr := selectProxy(proxies)
+			if proxyStr != "" {
+				proxyURL, err := u.Parse(proxyStr)
+				if err != nil {
+					return nil, err
+				}
+				LogMessage("PROXY", "Using Proxy: "+proxyStr, nil)
+				return proxyURL, nil
+			}
+			LogMessage("PROXY", "Using Proxy: Internal", nil)
+			return nil, nil // Returning nil uses the internal network (no proxy)
+		},
+	})
+
 	c.OnRequest(func(r *colly.Request) {
 		startTime = time.Now()
+
 		//fmt.Println("Visiting:", r.URL.String())
 		//fmt.Printf("Proxy: %s\n", r.ProxyURL)
 		LogMessage("INFO", "Visiting URL:"+r.URL.String(), nil)
-		LogMessage("INFO", "Proxy:"+r.ProxyURL, nil)
+		//LogMessage("INFO", "Proxy:"+r.ProxyURL, nil)
 	})
 	//on response lets check size of data
 	c.OnResponse(func(r *colly.Response) {
@@ -175,8 +201,8 @@ func scrapeURL(url string) (totalsize int) {
 			LogMessage("CAUTION", "Status code is not 200", nil)
 			//fmt.Printf("Status code mustnt be 200 right: %d\n", r.StatusCode)
 			LogMessage("CAUTION", "URL failed, Writing it to url_failed.csv  URL: "+url, nil)
-			appendToFile("../url_Failure.csv", []string{url})
-			writer.Write([]string{url})
+			appendToFile("../links/url_Failure.csv", []string{url})
+			//writer.Write([]string{url})
 			//} else {
 			//	fmt.Printf("Status code must be 200 right: %d", r.StatusCode)
 		}
@@ -192,7 +218,7 @@ func scrapeURL(url string) (totalsize int) {
 	c.Limit(&colly.LimitRule{
 		DomainGlob:  "fbref.com",
 		Parallelism: 1,
-		RandomDelay: 10*time.Second + 10,
+		RandomDelay: 5*time.Second + 1,
 	})
 
 	//search for table and pull data, putting into CSV---------------------------------->
@@ -223,12 +249,13 @@ func scrapeURL(url string) (totalsize int) {
 			rowIndex++
 		})
 	})
-	fmt.Println("")
 	//start and check for error
 	err = c.Visit(url)
 	if err != nil {
 		LogMessage("ERROR", "Unable to visit site: "+url, err)
+		appendToFile("../links/url_Failure.csv", []string{url})
 		//fmt.Println("Error visiting the site:", err)
+
 	}
 	c.Wait()
 	return requestSize
@@ -338,4 +365,9 @@ func LogMessage(severity string, action string, err error) {
 	if errWrite != nil {
 		log.Fatalf("Failed to write log message %s", err)
 	}
+}
+
+func selectProxy(proxies []string) string {
+	rand.Seed(time.Now().UnixNano())
+	return proxies[rand.Intn(len(proxies))]
 }

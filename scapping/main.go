@@ -42,6 +42,7 @@ func main() {
 			file, reader := openFileReadAll(csvfilepath)
 			defer file.Close()
 			records, err := reader.ReadAll()
+			LogMessage("DEBUG", "Using a new file for links : "+csvfilepath, nil)
 			if err != nil {
 				log.Fatalf("Unable to read file %s:%s", csvfilepath, err)
 			}
